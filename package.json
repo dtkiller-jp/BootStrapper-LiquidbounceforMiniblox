@@ -30,9 +30,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Miniblox Launcher",
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico"
+      "shortcutName": "Miniblox Launcher"
     }
   },
   "keywords": ["miniblox", "liquidbounce", "launcher"],
