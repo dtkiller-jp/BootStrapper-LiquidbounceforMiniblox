@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Liquidbounce Miniblox Launcher</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Liquidbounce Miniblox</h1>
+    <h2>Launcher</h2>
+    
+    <div class="section">
+      <label for="version">Userscript Version</label>
+      <select id="version">
+        <option value="">Loading...</option>
+      </select>
+      <p id="desc" class="description"></p>
+      <p id="updated" class="updated"></p>
+    </div>
+
+    <div class="section">
+      <button id="update" class="btn btn-secondary">Check for Updates</button>
+      <button id="launch" class="btn btn-primary">Launch Client</button>
+    </div>
+
+    <p id="status" class="status"></p>
+  </div>
+
+  <script>
+    const versionSelect = document.getElementById("version");
+    const status = document.getElementById("status");
+    const desc = document.getElementById("desc");
+    const updated = document.getElementById("updated");
+
+    // 初期化
+    Promise.all([window.api.getConfig(), window.api.getAvailableScripts()])
+      .then(([config, versions]) => {
+        versionSelect.innerHTML = "";
+        
+        if (versions.length === 0) {
+          const opt = document.createElement("option");
+          opt.textContent = "No versions available";
+          versionSelect.appendChild(opt);
+          return;
+        }
+
+        versions.forEach(v => {
+          const opt = document.createElement("option");
+          opt.value = v.url;
+          opt.textContent = v.name;
+          opt.dataset.desc = v.desc || "";
+          opt.dataset.updated = v.updated || "";
+          versionSelect.appendChild(opt);
+        });
+
+        // configのURLが一致するものを選択
+        const found = [...versionSelect.options].find(o => o.value === config.userscriptUrl);
+        if (found) {
+          versionSelect.value = found.value;
+          desc.textContent = found.dataset.desc || "";
+          updated.textContent = found.dataset.updated ? `Updated: ${found.dataset.updated}` : "";
+        }
+      })
+      .catch(e => {
+        status.textContent = "Error loading configuration: " + e.message;
+      });
+
+    // バージョン変更時
+    versionSelect.addEventListener("change", () => {
+      const selected = versionSelect.value;
+      const selectedOption = versionSelect.selectedOptions[0];
+      desc.textContent = selectedOption?.dataset.desc || "";
+      updated.textContent = selectedOption?.dataset.updated ? `Updated: ${selectedOption.dataset.updated}` : "";
+      window.api.setConfig({ userscriptUrl: selected });
+    });
+
+    // アップデート確認
+    document.getElementById("update").onclick = async () => {
+      status.textContent = "Checking for updates...";
+      try {
+        const result = await window.api.updateClient();
+        status.textContent = result;
+      } catch (e) {
+        status.textContent = "Update failed: " + e.message;
+      }
+    };
+
+    // クライアント起動
+    document.getElementById("launch").onclick = async () => {
+      status.textContent = "Launching client...";
+      try {
+        await window.api.launchClient();
+        status.textContent = "Client launched successfully.";
+      } catch (e) {
+        status.textContent = "Launch failed: " + e.message;
+      }
+    };
+  </script>
+</body>
+</html>

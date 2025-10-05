@@ -1,0 +1,34 @@
+{
+  "name": "liquidbounce-miniblox-bootstrapper",
+  "version": "1.0.0",
+  "description": "Bootstrapper for Liquidbounce Miniblox Client",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.liquidbounce.miniblox.bootstrapper",
+    "productName": "Liquidbounce Miniblox Launcher",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    }
+  },
+  "keywords": ["miniblox", "liquidbounce", "launcher"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {}
+}
