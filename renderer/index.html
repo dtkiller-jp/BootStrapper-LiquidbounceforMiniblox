@@ -2,13 +2,13 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Liquidbounce Miniblox Launcher</title>
+  <title>Miniblox Launcher</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Liquidbounce Miniblox</h1>
-    <h2>Launcher</h2>
+    <h1>Miniblox</h1>
+    <h2>Client Launcher</h2>
     
     <div class="section">
       <label for="version">Userscript Version</label>
@@ -20,8 +20,7 @@
     </div>
 
     <div class="section">
-      <button id="update" class="btn btn-secondary">Check for Updates</button>
-      <button id="launch" class="btn btn-primary">Launch Client</button>
+      <button id="launch" class="btn btn-primary">Launch</button>
     </div>
 
     <p id="status" class="status"></p>
@@ -34,14 +33,20 @@
     const updated = document.getElementById("updated");
 
     // 初期化
+    console.log("Initializing...");
+    
     Promise.all([window.api.getConfig(), window.api.getAvailableScripts()])
       .then(([config, versions]) => {
+        console.log("Config:", config);
+        console.log("Versions:", versions);
+        
         versionSelect.innerHTML = "";
         
-        if (versions.length === 0) {
+        if (!versions || versions.length === 0) {
           const opt = document.createElement("option");
           opt.textContent = "No versions available";
           versionSelect.appendChild(opt);
+          status.textContent = "Failed to load userscript versions";
           return;
         }
 
@@ -49,8 +54,8 @@
           const opt = document.createElement("option");
           opt.value = v.url;
           opt.textContent = v.name;
-          opt.dataset.desc = v.desc || "";
-          opt.dataset.updated = v.updated || "";
+          opt.dataset.desc = v.description || "";
+          opt.dataset.version = v.version || "";
           versionSelect.appendChild(opt);
         });
 
@@ -59,11 +64,21 @@
         if (found) {
           versionSelect.value = found.value;
           desc.textContent = found.dataset.desc || "";
-          updated.textContent = found.dataset.updated ? `Updated: ${found.dataset.updated}` : "";
+          updated.textContent = found.dataset.version ? `Version: ${found.dataset.version}` : "";
+        } else if (versionSelect.options.length > 0) {
+          // 一致しない場合は最初のオプションを選択
+          versionSelect.selectedIndex = 0;
+          const firstOption = versionSelect.options[0];
+          desc.textContent = firstOption.dataset.desc || "";
+          updated.textContent = firstOption.dataset.version ? `Version: ${firstOption.dataset.version}` : "";
         }
+        
+        status.textContent = "Ready";
       })
       .catch(e => {
+        console.error("Initialization error:", e);
         status.textContent = "Error loading configuration: " + e.message;
+        versionSelect.innerHTML = '<option>Error loading versions</option>';
       });
 
     // バージョン変更時
@@ -71,29 +86,23 @@
       const selected = versionSelect.value;
       const selectedOption = versionSelect.selectedOptions[0];
       desc.textContent = selectedOption?.dataset.desc || "";
-      updated.textContent = selectedOption?.dataset.updated ? `Updated: ${selectedOption.dataset.updated}` : "";
+      updated.textContent = selectedOption?.dataset.version ? `Version: ${selectedOption.dataset.version}` : "";
       window.api.setConfig({ userscriptUrl: selected });
     });
 
-    // アップデート確認
-    document.getElementById("update").onclick = async () => {
+    // クライアント起動（自動更新付き）
+    document.getElementById("launch").onclick = async () => {
+      const launchBtn = document.getElementById("launch");
+      launchBtn.disabled = true;
+      
       status.textContent = "Checking for updates...";
+      
       try {
-        const result = await window.api.updateClient();
+        const result = await window.api.launchClient();
         status.textContent = result;
       } catch (e) {
-        status.textContent = "Update failed: " + e.message;
-      }
-    };
-
-    // クライアント起動
-    document.getElementById("launch").onclick = async () => {
-      status.textContent = "Launching client...";
-      try {
-        await window.api.launchClient();
-        status.textContent = "Client launched successfully.";
-      } catch (e) {
-        status.textContent = "Launch failed: " + e.message;
+        status.textContent = "Error: " + e.message;
+        launchBtn.disabled = false;
       }
     };
   </script>

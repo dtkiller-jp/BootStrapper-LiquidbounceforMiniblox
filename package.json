@@ -6,21 +6,33 @@
   "type": "module",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win"
+    "build": "electron-builder --win",
+    "build:installer": "electron-builder --win nsis",
+    "build:portable": "electron-builder --win portable"
   },
   "build": {
     "appId": "com.liquidbounce.miniblox.bootstrapper",
-    "productName": "Liquidbounce Miniblox Launcher",
+    "productName": "Miniblox Launcher",
     "directories": {
       "output": "dist"
     },
     "win": {
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": ["x64"]
         }
-      ]
+      ],
+      "artifactName": "MinibloxLauncher-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Miniblox Launcher",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     }
   },
   "keywords": ["miniblox", "liquidbounce", "launcher"],
