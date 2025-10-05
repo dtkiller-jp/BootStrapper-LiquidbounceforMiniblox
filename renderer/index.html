@@ -7,34 +7,31 @@
 </head>
 <body>
   <div class="container">
-    <h1>Miniblox</h1>
-    <h2>Client Launcher</h2>
+    <div class="header">
+      <h1>Liquidbounce For Miniblox</h1>
+    </div>
     
-    <div class="section">
-      <label for="version">Userscript Version</label>
-      <select id="version">
-        <option value="">Loading...</option>
-      </select>
-      <p id="desc" class="description"></p>
-      <p id="updated" class="updated"></p>
+    <div class="content">
+      <div class="left">
+        <select id="version" class="version-select">
+          <option value="">Loading...</option>
+        </select>
+        <div id="progress-container" class="progress-container" style="display: none;">
+          <div id="progress-bar" class="progress-bar"></div>
+          <span id="progress-text" class="progress-text">0%</span>
+        </div>
+      </div>
+      
+      <div class="right">
+        <button id="launch" class="launch-btn">Launch</button>
+      </div>
     </div>
-
-    <div class="section">
-      <button id="launch" class="btn btn-primary">Launch</button>
-    </div>
-
-    <p id="status" class="status"></p>
   </div>
 
   <script>
     const versionSelect = document.getElementById("version");
-    const status = document.getElementById("status");
-    const desc = document.getElementById("desc");
-    const updated = document.getElementById("updated");
 
     // 初期化
-    console.log("Initializing...");
-    
     Promise.all([window.api.getConfig(), window.api.getAvailableScripts()])
       .then(([config, versions]) => {
         console.log("Config:", config);
@@ -46,7 +43,6 @@
           const opt = document.createElement("option");
           opt.textContent = "No versions available";
           versionSelect.appendChild(opt);
-          status.textContent = "Failed to load userscript versions";
           return;
         }
 
@@ -54,8 +50,6 @@
           const opt = document.createElement("option");
           opt.value = v.url;
           opt.textContent = v.name;
-          opt.dataset.desc = v.description || "";
-          opt.dataset.version = v.version || "";
           versionSelect.appendChild(opt);
         });
 
@@ -63,46 +57,58 @@
         const found = [...versionSelect.options].find(o => o.value === config.userscriptUrl);
         if (found) {
           versionSelect.value = found.value;
-          desc.textContent = found.dataset.desc || "";
-          updated.textContent = found.dataset.version ? `Version: ${found.dataset.version}` : "";
         } else if (versionSelect.options.length > 0) {
-          // 一致しない場合は最初のオプションを選択
           versionSelect.selectedIndex = 0;
-          const firstOption = versionSelect.options[0];
-          desc.textContent = firstOption.dataset.desc || "";
-          updated.textContent = firstOption.dataset.version ? `Version: ${firstOption.dataset.version}` : "";
         }
-        
-        status.textContent = "Ready";
       })
       .catch(e => {
         console.error("Initialization error:", e);
-        status.textContent = "Error loading configuration: " + e.message;
         versionSelect.innerHTML = '<option>Error loading versions</option>';
       });
 
     // バージョン変更時
     versionSelect.addEventListener("change", () => {
       const selected = versionSelect.value;
-      const selectedOption = versionSelect.selectedOptions[0];
-      desc.textContent = selectedOption?.dataset.desc || "";
-      updated.textContent = selectedOption?.dataset.version ? `Version: ${selectedOption.dataset.version}` : "";
       window.api.setConfig({ userscriptUrl: selected });
     });
 
     // クライアント起動（自動更新付き）
     document.getElementById("launch").onclick = async () => {
       const launchBtn = document.getElementById("launch");
-      launchBtn.disabled = true;
+      const progressContainer = document.getElementById("progress-container");
+      const progressBar = document.getElementById("progress-bar");
+      const progressText = document.getElementById("progress-text");
       
-      status.textContent = "Checking for updates...";
+      launchBtn.disabled = true;
+      versionSelect.style.display = "none";
+      progressContainer.style.display = "block";
+      
+      // プログレスバーアニメーション
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += 5;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + "%";
+        progressText.textContent = progress + "%";
+      }, 100);
       
       try {
-        const result = await window.api.launchClient();
-        status.textContent = result;
+        await window.api.launchClient();
+        
+        clearInterval(progressInterval);
+        progressBar.style.width = "100%";
+        progressText.textContent = "100%";
+        
+        setTimeout(() => {
+          // Launcherは自動的に閉じる
+        }, 500);
       } catch (e) {
-        status.textContent = "Error: " + e.message;
+        clearInterval(progressInterval);
+        console.error("Launch error:", e);
         launchBtn.disabled = false;
+        versionSelect.style.display = "block";
+        progressContainer.style.display = "none";
+        progressBar.style.width = "0%";
       }
     };
   </script>

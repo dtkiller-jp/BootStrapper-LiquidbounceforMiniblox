@@ -31,8 +31,8 @@ let mainWindow;
 
 async function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 500,
-    height: 400,
+    width: 600,
+    height: 200,
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
